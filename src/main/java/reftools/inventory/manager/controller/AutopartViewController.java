@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import reftools.inventory.manager.dto.AutopartRequest;
 import reftools.inventory.manager.mapper.AutopartMapper;
@@ -65,6 +67,17 @@ public class AutopartViewController {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             redirectAttributes.addFlashAttribute("autopartForm", request);
             return "redirect:/autoparts/" + id + "/editar";
+        }
+        return "redirect:/autoparts";
+    }
+
+    @RequestMapping(value = "/autoparts/{id}/eliminar", method = RequestMethod.POST)
+    public String deleteAutopart(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            autopartService.deleteAutopart(id);
+            redirectAttributes.addFlashAttribute("successMessage", "La refacción se eliminó correctamente.");
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No se encontró la refacción que intentas eliminar.");
         }
         return "redirect:/autoparts";
     }

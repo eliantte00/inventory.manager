@@ -57,4 +57,12 @@ public class AutopartService {
         existing.setAmount(data.getAmount());
         return autopartRepository.save(existing);
     }
+
+    @Transactional
+    public void deleteAutopart(Long id) {
+        if (!autopartRepository.existsById(id)) {
+            throw new EntityNotFoundException("No se encontró la refacción a eliminar");
+        }
+        autopartRepository.deleteById(id);
+    }
 }
