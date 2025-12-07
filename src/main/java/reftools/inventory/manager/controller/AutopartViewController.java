@@ -18,6 +18,7 @@ import reftools.inventory.manager.model.InventoryMovement;
 import reftools.inventory.manager.service.AutopartService;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -32,6 +33,7 @@ public class AutopartViewController {
     @GetMapping({"/", "/autoparts"})
     public String showAutoparts(@RequestParam(value = "q", required = false) String query,
                                 @RequestParam(value = "tab", required = false) String tab,
+                                @RequestParam(value = "sort", required = false) String sort,
                                 Model model) {
         if (!model.containsAttribute("autopartForm")) {
             model.addAttribute("autopartForm", new AutopartRequest());
@@ -39,17 +41,23 @@ public class AutopartViewController {
         model.addAttribute("editing", false);
 
         boolean filtering = query != null && !query.isBlank();
+        boolean sorting = "amount".equals(sort);
+        
         List<Autopart> searchResults = filtering ? autopartService.searchAutoparts(query) : Collections.emptyList();
         Integer totalAmount = filtering ? searchResults.stream()
                 .mapToInt(Autopart::getAmount)
                 .sum() : null;
 
         List<Autopart> autoparts = filtering ? searchResults : autopartService.getAllAutoparts();
+        if (sorting) {
+            autoparts.sort(Comparator.comparingInt(Autopart::getAmount));
+        }
         model.addAttribute("autoparts", autoparts);
         model.addAttribute("searchQuery", query != null ? query : "");
         model.addAttribute("searchResults", searchResults);
         model.addAttribute("searchTotalAmount", totalAmount);
         model.addAttribute("isFiltering", filtering);
+        model.addAttribute("isSortingByStock", sorting);
         String activeTab = (tab != null && !tab.isBlank()) ? tab : (filtering ? "consult" : "add");
         if (!"consult".equals(activeTab)) {
             activeTab = "add";
