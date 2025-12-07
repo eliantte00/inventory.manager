@@ -64,40 +64,30 @@
             <div class="search-header">
                 <div>
                     <h2>Consultar existencias</h2>
-                    <p>Ingresa un nombre o SKU para conocer el total de existencias registradas.</p>
+                    <p>Ingresa un nombre, marca o SKU para conocer el total de existencias registradas.</p>
                 </div>
             </div>
+            <div th:if="${successMessage}" class="alert alert--success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert--error" th:text="${errorMessage}"></div>
             <form class="search-bar" method="get" th:action="@{/autoparts}">
-                <input type="text" name="q" placeholder="Buscar por nombre o SKU" th:value="${searchQuery}">
+                <input type="hidden" name="tab" value="consult">
+                <input type="text" name="q" placeholder="Buscar por nombre, marca o SKU" th:value="${searchQuery}">
                 <button type="submit" class="search-bar__button">Buscar</button>
-                <a th:if="${searchQuery}" th:href="@{/autoparts}" class="link-button link-button--ghost">Limpiar</a>
+                <a th:if="${searchQuery}" th:href="@{/autoparts(tab='consult')}" class="search-bar__button search-bar__button--ghost">Limpiar</a>
             </form>
-            <div class="search-results" th:if="${searchQuery}">
-                <div class="search-results__summary">
-                    <span th:text="'Coincidencias: ' + ${searchResults.size()}"></span>
-                    <span th:text="'Total de existencias: ' + (${searchTotalAmount} != null ? ${searchTotalAmount} : 0)"></span>
-                </div>
-                <div th:if="${#lists.isEmpty(searchResults)}" class="search-results__empty">
-                    No se encontraron refacciones para "<span th:text="${searchQuery}"></span>".
-                </div>
-                <ul th:if="${!#lists.isEmpty(searchResults)}">
-                    <li th:each="result : ${searchResults}">
-                        <div>
-                            <strong th:text="${result.name}"></strong>
-                            <span th:text="'SKU: ' + ${result.sku}"></span>
-                        </div>
-                        <span th:text="${result.amount} + ' existencias'"></span>
-                    </li>
-                </ul>
-            </div>
         </section>
 
         <section class="card">
             <h2>Refacciones registradas</h2>
-            <div th:if="${#lists.isEmpty(autoparts)}" class="empty-state">
-                Aún no hay refacciones. Usa el formulario para registrar la primera.
+            <div th:if="${isFiltering}" class="search-summary">
+                <span th:text="'Coincidencias: ' + ${searchResults.size()}"></span>
+                <span th:text="'Total de existencias: ' + (${searchTotalAmount} != null ? ${searchTotalAmount} : 0)"></span>
             </div>
-            <div th:unless="${#lists.isEmpty(autoparts)}">
+            <div th:if="${#lists.isEmpty(autoparts)}" class="empty-state">
+                <span th:if="${isFiltering}" th:text="'No se encontraron refacciones para \'' + ${searchQuery} + '\''"></span>
+                <span th:unless="${isFiltering}">Aún no hay refacciones. Usa el formulario para registrar la primera.</span>
+            </div>
+            <div th:if="${!#lists.isEmpty(autoparts)}">
                 <table>
                     <thead>
                     <tr>
@@ -137,9 +127,17 @@
         const tabButtons = document.querySelectorAll('[data-tab-target]');
         const tabContents = document.querySelectorAll('[data-tab-content]');
 
+        // Función para limpiar mensajes
+        const clearAlerts = () => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.display = 'none';
+            });
+        };
+
         tabButtons.forEach((button) => {
             button.addEventListener('click', () => {
                 const target = button.getAttribute('data-tab-target');
+                clearAlerts(); // Limpiar mensajes al cambiar de pestaña
 
                 tabButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
                 tabContents.forEach((content) => {
