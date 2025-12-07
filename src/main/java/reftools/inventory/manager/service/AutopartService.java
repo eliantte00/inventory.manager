@@ -43,7 +43,12 @@ public class AutopartService {
             return List.of();
         }
         String sanitized = query.trim();
-        return autopartRepository.findByNameContainingIgnoreCaseOrSkuContainingIgnoreCase(sanitized, sanitized);
+        return autopartRepository
+                .findByNameContainingIgnoreCaseOrBrandContainingIgnoreCaseOrSkuContainingIgnoreCase(
+                        sanitized,
+                        sanitized,
+                        sanitized
+                );
     }
 
     @Transactional(readOnly = true)
