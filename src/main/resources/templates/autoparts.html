@@ -114,6 +114,12 @@
             cursor: pointer;
             padding: 0.25rem 0.5rem;
         }
+        .link-button--danger {
+            color: #dc2626;
+        }
+        .inline-form {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -182,8 +188,12 @@
                     <td th:text="${autopart.sku}"></td>
                     <td th:text="${#numbers.formatDecimal(autopart.price, 1, 'COMMA', 2, 'POINT')}"></td>
                     <td th:text="${autopart.amount}"></td>
-                    <td class="actions">
+                    <td class="actions" style="justify-content: flex-end; gap: 0.25rem;">
                         <a th:href="@{/autoparts/{id}/editar(id=${autopart.id})}" class="link-button">Editar</a>
+                        <form th:action="@{/autoparts/{id}/eliminar(id=${autopart.id})}" method="post" class="inline-form"
+                              onsubmit="return confirm('¿Quieres eliminar esta refacción?');">
+                            <button type="submit" class="link-button link-button--danger">Eliminar</button>
+                        </form>
                     </td>
                 </tr>
                 </tbody>
