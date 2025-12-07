@@ -15,111 +15,139 @@
         <p>Consulta las refacciones existentes y agrega nuevas al catálogo.</p>
     </header>
 
-    <section class="card card--search">
-        <div class="search-header">
-            <div>
-                <h2>Consultar existencias</h2>
-                <p>Ingresa un nombre o SKU para conocer el total de existencias registradas.</p>
-            </div>
-        </div>
-        <form class="search-bar" method="get" th:action="@{/autoparts}">
-            <input type="text" name="q" placeholder="Buscar por nombre o SKU" th:value="${searchQuery}">
-            <button type="submit" class="search-bar__button">Buscar</button>
-            <a th:if="${searchQuery}" th:href="@{/autoparts}" class="link-button link-button--ghost">Limpiar</a>
-        </form>
-        <div class="search-results" th:if="${searchQuery}">
-            <div class="search-results__summary">
-                <span th:text="'Coincidencias: ' + ${searchResults.size()}"></span>
-                <span th:text="'Total de existencias: ' + (${searchTotalAmount} != null ? ${searchTotalAmount} : 0)"></span>
-            </div>
-            <div th:if="${#lists.isEmpty(searchResults)}" class="search-results__empty">
-                No se encontraron refacciones para "<span th:text="${searchQuery}"></span>".
-            </div>
-            <ul th:if="${!#lists.isEmpty(searchResults)}">
-                <li th:each="result : ${searchResults}">
-                    <div>
-                        <strong th:text="${result.name}"></strong>
-                        <span th:text="'SKU: ' + ${result.sku}"></span>
-                    </div>
-                    <span th:text="${result.amount} + ' existencias'"></span>
-                </li>
-            </ul>
-        </div>
-    </section>
+    <div class="tabs" data-tabs>
+        <button type="button" class="tab-button" data-tab-target="add"
+                th:classappend="${activeTab} == 'add' ? ' active' : ''">Agregar refacción</button>
+        <button type="button" class="tab-button" data-tab-target="consult"
+                th:classappend="${activeTab} == 'consult' ? ' active' : ''">Consultar inventario</button>
+    </div>
 
-    <section class="card">
-        <h2 th:text="${editing} ? 'Editar refacción' : 'Agregar una refacción'"></h2>
-        <div th:if="${successMessage}" class="alert alert--success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="alert alert--error" th:text="${errorMessage}"></div>
-        <form th:action="${editing} ? @{/autoparts/{id}/editar(id=${autopartForm.id})} : @{/autoparts}" th:object="${autopartForm}" method="post">
-            <input type="hidden" th:if="${editing}" th:field="*{id}">
-            <div>
-                <label for="name">Nombre</label>
-                <input id="name" type="text" th:field="*{name}" placeholder="Balatas" required>
-            </div>
-            <div>
-                <label for="brand">Marca</label>
-                <input id="brand" type="text" th:field="*{brand}" placeholder="ACME" required>
-            </div>
-            <div>
-                <label for="sku">SKU</label>
-                <input id="sku" type="text" th:field="*{sku}" placeholder="BP-1234" required>
-            </div>
-            <div>
-                <label for="price">Precio</label>
-                <input id="price" type="number" step="0.01" min="0" th:field="*{price}" placeholder="49.99" required>
-            </div>
-            <div>
-                <label for="amount">Existencias</label>
-                <input id="amount" type="number" min="0" th:field="*{amount}" placeholder="10" required>
-            </div>
-            <div class="full-row" style="margin-top: 0.5rem;">
-                <div style="display: flex; gap: 0.75rem; align-items: center;">
-                    <button type="submit" th:text="${editing} ? 'Guardar cambios' : 'Guardar refacción'"></button>
-                    <a th:if="${editing}" href="/autoparts" class="link-button">Cancelar</a>
+    <div class="tab-content" data-tab-content="add" th:classappend="${activeTab} == 'add' ? ' active' : ''">
+        <section class="card">
+            <h2 th:text="${editing} ? 'Editar refacción' : 'Agregar una refacción'"></h2>
+            <div th:if="${successMessage}" class="alert alert--success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert--error" th:text="${errorMessage}"></div>
+            <form th:action="${editing} ? @{/autoparts/{id}/editar(id=${autopartForm.id})} : @{/autoparts}" th:object="${autopartForm}" method="post">
+                <input type="hidden" th:if="${editing}" th:field="*{id}">
+                <div>
+                    <label for="name">Nombre</label>
+                    <input id="name" type="text" th:field="*{name}" placeholder="Balatas" required>
+                </div>
+                <div>
+                    <label for="brand">Marca</label>
+                    <input id="brand" type="text" th:field="*{brand}" placeholder="ACME" required>
+                </div>
+                <div>
+                    <label for="sku">SKU</label>
+                    <input id="sku" type="text" th:field="*{sku}" placeholder="BP-1234" required>
+                </div>
+                <div>
+                    <label for="price">Precio</label>
+                    <input id="price" type="number" step="0.01" min="0" th:field="*{price}" placeholder="49.99" required>
+                </div>
+                <div>
+                    <label for="amount">Existencias</label>
+                    <input id="amount" type="number" min="0" th:field="*{amount}" placeholder="10" required>
+                </div>
+                <div class="full-row" style="margin-top: 0.5rem;">
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <button type="submit" th:text="${editing} ? 'Guardar cambios' : 'Guardar refacción'"></button>
+                        <a th:if="${editing}" href="/autoparts" class="link-button">Cancelar</a>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="tab-content" data-tab-content="consult" th:classappend="${activeTab} == 'consult' ? ' active' : ''">
+        <section class="card card--search">
+            <div class="search-header">
+                <div>
+                    <h2>Consultar existencias</h2>
+                    <p>Ingresa un nombre o SKU para conocer el total de existencias registradas.</p>
                 </div>
             </div>
-        </form>
-    </section>
+            <form class="search-bar" method="get" th:action="@{/autoparts}">
+                <input type="text" name="q" placeholder="Buscar por nombre o SKU" th:value="${searchQuery}">
+                <button type="submit" class="search-bar__button">Buscar</button>
+                <a th:if="${searchQuery}" th:href="@{/autoparts}" class="link-button link-button--ghost">Limpiar</a>
+            </form>
+            <div class="search-results" th:if="${searchQuery}">
+                <div class="search-results__summary">
+                    <span th:text="'Coincidencias: ' + ${searchResults.size()}"></span>
+                    <span th:text="'Total de existencias: ' + (${searchTotalAmount} != null ? ${searchTotalAmount} : 0)"></span>
+                </div>
+                <div th:if="${#lists.isEmpty(searchResults)}" class="search-results__empty">
+                    No se encontraron refacciones para "<span th:text="${searchQuery}"></span>".
+                </div>
+                <ul th:if="${!#lists.isEmpty(searchResults)}">
+                    <li th:each="result : ${searchResults}">
+                        <div>
+                            <strong th:text="${result.name}"></strong>
+                            <span th:text="'SKU: ' + ${result.sku}"></span>
+                        </div>
+                        <span th:text="${result.amount} + ' existencias'"></span>
+                    </li>
+                </ul>
+            </div>
+        </section>
 
-    <section class="card">
-        <h2>Refacciones registradas</h2>
-        <div th:if="${#lists.isEmpty(autoparts)}" class="empty-state">
-            Aún no hay refacciones. Usa el formulario para registrar la primera.
-        </div>
-        <div th:unless="${#lists.isEmpty(autoparts)}">
-            <table>
-                <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Marca</th>
-                    <th>SKU</th>
-                    <th>Precio</th>
-                    <th>Existencias</th>
-                    <th style="text-align: right;">Acciones</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="autopart : ${autoparts}">
-                    <td th:text="${autopart.name}"></td>
-                    <td th:text="${autopart.brand}"></td>
-                    <td th:text="${autopart.sku}"></td>
-                    <td th:text="${#numbers.formatDecimal(autopart.price, 1, 'COMMA', 2, 'POINT')}"></td>
-                    <td th:text="${autopart.amount}"></td>
-                    <td class="actions" style="justify-content: flex-end; gap: 0.25rem;">
-                        <form th:action="@{/autoparts/{id}/editar(id=${autopart.id})}" method="get" class="inline-form">
-                            <button type="submit" class="link-button">Editar</button>
-                        </form>
-                        <form th:action="@{/autoparts/{id}/eliminar(id=${autopart.id})}" method="post" class="inline-form"
-                              onsubmit="return confirm('¿Quieres eliminar esta refacción?');">
-                            <button type="submit" class="link-button link-button--danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
+        <section class="card">
+            <h2>Refacciones registradas</h2>
+            <div th:if="${#lists.isEmpty(autoparts)}" class="empty-state">
+                Aún no hay refacciones. Usa el formulario para registrar la primera.
+            </div>
+            <div th:unless="${#lists.isEmpty(autoparts)}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Marca</th>
+                        <th>SKU</th>
+                        <th>Precio</th>
+                        <th>Existencias</th>
+                        <th style="text-align: right;">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="autopart : ${autoparts}">
+                        <td th:text="${autopart.name}"></td>
+                        <td th:text="${autopart.brand}"></td>
+                        <td th:text="${autopart.sku}"></td>
+                        <td th:text="${#numbers.formatDecimal(autopart.price, 1, 'COMMA', 2, 'POINT')}"></td>
+                        <td th:text="${autopart.amount}"></td>
+                        <td class="actions" style="justify-content: flex-end; gap: 0.25rem;">
+                            <form th:action="@{/autoparts/{id}/editar(id=${autopart.id})}" method="get" class="inline-form">
+                                <button type="submit" class="link-button">Editar</button>
+                            </form>
+                            <form th:action="@{/autoparts/{id}/eliminar(id=${autopart.id})}" method="post" class="inline-form"
+                                  onsubmit="return confirm('¿Quieres eliminar esta refacción?');">
+                                <button type="submit" class="link-button link-button--danger">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabButtons = document.querySelectorAll('[data-tab-target]');
+        const tabContents = document.querySelectorAll('[data-tab-content]');
+
+        tabButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = button.getAttribute('data-tab-target');
+
+                tabButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+                tabContents.forEach((content) => {
+                    content.classList.toggle('active', content.getAttribute('data-tab-content') === target);
+                });
+            });
+        });
+    });
+</script>
 </body>
 </html>
