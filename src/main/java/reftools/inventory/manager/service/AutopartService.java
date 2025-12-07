@@ -4,7 +4,10 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reftools.inventory.manager.model.Autopart;
+import reftools.inventory.manager.model.InventoryMovement;
+import reftools.inventory.manager.model.MovementType;
 import reftools.inventory.manager.repository.AutopartRepository;
+import reftools.inventory.manager.repository.InventoryMovementRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,9 +16,11 @@ import java.util.Optional;
 public class AutopartService {
 
     private final AutopartRepository autopartRepository;
+    private final InventoryMovementRepository movementRepository;
 
-    public AutopartService(AutopartRepository autopartRepository) {
+    public AutopartService(AutopartRepository autopartRepository, InventoryMovementRepository movementRepository) {
         this.autopartRepository = autopartRepository;
+        this.movementRepository = movementRepository;
     }
 
     @Transactional
@@ -70,8 +75,46 @@ public class AutopartService {
     @Transactional
     public void deleteAutopart(Long id) {
         if (!autopartRepository.existsById(id)) {
-            throw new EntityNotFoundException("No se encontró la refacción a eliminar");
+            throw new EntityNotFoundException("No se encontró la refacción con ID: " + id);
         }
         autopartRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Autopart addStock(Long id, Integer quantity) {
+        return updateStock(id, quantity, MovementType.ENTRADA, "Ajuste manual de inventario");
+    }
+
+    @Transactional
+    public Autopart updateStock(Long id, Integer quantity, MovementType type, String reason) {
+        Autopart autopart = getAutopart(id);
+        
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("La cantidad debe ser mayor a cero");
+        }
+
+        // Actualizar la cantidad en el inventario
+        int newAmount = autopart.getAmount();
+        if (type == MovementType.ENTRADA) {
+            newAmount += quantity;
+        } else {
+            if (autopart.getAmount() < quantity) {
+                throw new IllegalArgumentException("No hay suficientes existencias para realizar esta operación");
+            }
+            newAmount -= quantity;
+        }
+
+        // Guardar el movimiento de inventario
+        InventoryMovement movement = new InventoryMovement(autopart, quantity, type, reason);
+        movementRepository.save(movement);
+
+        // Actualizar la cantidad en la refacción
+        autopart.setAmount(newAmount);
+        return autopartRepository.save(autopart);
+    }
+
+    @Transactional(readOnly = true)
+    public List<InventoryMovement> getMovementHistory(Long autopartId) {
+        return movementRepository.findByAutopartIdOrderByMovementDateDesc(autopartId);
     }
 }
