@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import reftools.inventory.manager.dto.AutopartRequest;
 import reftools.inventory.manager.mapper.AutopartMapper;
 import reftools.inventory.manager.model.Autopart;
+import reftools.inventory.manager.model.InventoryMovement;
 import reftools.inventory.manager.service.AutopartService;
 
 import java.util.Collections;
@@ -128,5 +129,20 @@ public class AutopartViewController {
         model.addAttribute("searchResults", Collections.emptyList());
         model.addAttribute("searchTotalAmount", null);
         model.addAttribute("activeTab", "add");
+    }
+    
+    @GetMapping("/autoparts/{id}/movements")
+    public String showMovementHistory(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Autopart autopart = autopartService.getAutopart(id);
+            List<InventoryMovement> movements = autopartService.getMovementHistory(id);
+            
+            model.addAttribute("autopart", autopart);
+            model.addAttribute("movements", movements);
+            return "movements";
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No se encontró la refacción solicitada.");
+            return "redirect:/autoparts";
+        }
     }
 }

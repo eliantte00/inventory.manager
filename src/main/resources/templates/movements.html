@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Movimientos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/autoparts.css}">
+    <style>
+        .movement-card {
+            background: var(--surface-card);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--surface-card-border);
+            box-shadow: var(--surface-card-shadow);
+            backdrop-filter: blur(16px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .movement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .movement-card.entrada {
+            border-left: 4px solid #4ade80;
+        }
+        
+        .movement-card.salida {
+            border-left: 4px solid #f87171;
+        }
+        
+        .movement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .movement-type {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+        }
+        
+        .movement-type.entrada {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(34, 211, 238, 0.2));
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        
+        .movement-type.salida {
+            background: linear-gradient(135deg, rgba(248, 113, 113, 0.2), rgba(251, 146, 60, 0.2));
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+        
+        .movement-date {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .movement-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+        
+        .movement-quantity {
+            font-weight: 600;
+            color: #f4f6fb;
+        }
+        
+        .movement-quantity.entrada {
+            color: #4ade80;
+        }
+        
+        .movement-quantity.salida {
+            color: #f87171;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-primary-strong);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0;
+            transition: color 0.2s ease;
+        }
+        
+        .back-button:hover {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+        
+        .back-button svg {
+            transition: transform 0.2s ease;
+        }
+        
+        .back-button:hover svg {
+            transform: translateX(-2px);
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <a th:href="@{/autoparts}" class="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Volver al inventario
+    </a>
+    
+    <header>
+        <h1>Historial de Movimientos</h1>
+        <p th:if="${autopart}">
+            Refacción: <strong th:text="${autopart.name}"></strong> - 
+            SKU: <strong th:text="${autopart.sku}"></strong>
+        </p>
+    </header>
+
+    <div th:if="${movements.empty}" class="card">
+        <p>No hay movimientos registrados para esta refacción.</p>
+    </div>
+
+    <div class="movements-list">
+        <div th:each="movement : ${movements}" 
+             th:class="'movement-card ' + ${movement.type.name().toLowerCase()}">
+            <div class="movement-header">
+                <span th:class="'movement-type ' + ${movement.type.name().toLowerCase()}" 
+                      th:text="${movement.type.name()}"></span>
+                <span class="movement-date" th:text="${#temporals.format(movement.movementDate, 'dd/MM/yyyy HH:mm')}"></span>
+            </div>
+            <p th:text="${movement.reason}"></p>
+            <div class="movement-details">
+                <span>Cantidad: <span th:class="'movement-quantity ' + ${movement.type.name().toLowerCase()}" 
+                                   th:text="${movement.type.name() == 'ENTRADA' ? '+' : '-'} + ${movement.quantity}"></span></span>
+                <span>Existencias después: <span th:text="${movement.quantity + (movement.autopart.amount - movement.quantity * (movement.type.name() == 'ENTRADA' ? 1 : -1))}"></span></span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
