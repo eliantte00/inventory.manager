@@ -1,0 +1,30 @@
+language: java
+jdk:
+  - openjdk21
+
+# Configuración de caché para acelerar las compilaciones
+cache:
+  directories:
+    - "$HOME/.m2"
+
+# Configuración de Maven
+install: true
+script: mvn clean verify
+
+# Notificaciones (opcional)
+notifications:
+  email: false
+
+# Configuración de ramas
+branches:
+  only:
+    - main
+    - master
+    - develop
+
+# Configuración de la compilación en contenedores
+sudo: false
+
+# Configuración de la matriz de construcción
+matrix:
+  fast_finish: true
