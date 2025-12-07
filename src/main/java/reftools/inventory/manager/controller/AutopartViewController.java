@@ -29,34 +29,46 @@ public class AutopartViewController {
     }
 
     @GetMapping({"/", "/autoparts"})
-    public String showAutoparts(@RequestParam(value = "q", required = false) String query, Model model) {
+    public String showAutoparts(@RequestParam(value = "q", required = false) String query,
+                                @RequestParam(value = "tab", required = false) String tab,
+                                Model model) {
         if (!model.containsAttribute("autopartForm")) {
             model.addAttribute("autopartForm", new AutopartRequest());
         }
         model.addAttribute("editing", false);
-        model.addAttribute("autoparts", autopartService.getAllAutoparts());
 
-        List<Autopart> searchResults = Collections.emptyList();
-        Integer totalAmount = null;
-        if (query != null && !query.isBlank()) {
-            searchResults = autopartService.searchAutoparts(query);
-            totalAmount = searchResults.stream()
-                    .mapToInt(Autopart::getAmount)
-                    .sum();
-        }
+        boolean filtering = query != null && !query.isBlank();
+        List<Autopart> searchResults = filtering ? autopartService.searchAutoparts(query) : Collections.emptyList();
+        Integer totalAmount = filtering ? searchResults.stream()
+                .mapToInt(Autopart::getAmount)
+                .sum() : null;
+
+        List<Autopart> autoparts = filtering ? searchResults : autopartService.getAllAutoparts();
+        model.addAttribute("autoparts", autoparts);
         model.addAttribute("searchQuery", query != null ? query : "");
         model.addAttribute("searchResults", searchResults);
         model.addAttribute("searchTotalAmount", totalAmount);
-        model.addAttribute("activeTab", (query != null && !query.isBlank()) ? "consult" : "add");
+        model.addAttribute("isFiltering", filtering);
+        String activeTab = (tab != null && !tab.isBlank()) ? tab : (filtering ? "consult" : "add");
+        if (!"consult".equals(activeTab)) {
+            activeTab = "add";
+        }
+        model.addAttribute("activeTab", activeTab);
         return "autoparts";
     }
 
     @PostMapping("/autoparts")
     public String createAutopart(@ModelAttribute("autopartForm") AutopartRequest request,
                                  RedirectAttributes redirectAttributes) {
-        autopartService.createAutopart(AutopartMapper.fromRequest(request));
-        redirectAttributes.addFlashAttribute("successMessage", "La refacción se registró correctamente.");
-        return "redirect:/autoparts";
+        try {
+            autopartService.createAutopart(AutopartMapper.fromRequest(request));
+            redirectAttributes.addFlashAttribute("successMessage", "La refacción se registró correctamente.");
+            return "redirect:/autoparts";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("autopartForm", request);
+            return "redirect:/autoparts";
+        }
     }
 
     @GetMapping("/autoparts/{id}/editar")
@@ -91,13 +103,23 @@ public class AutopartViewController {
     }
 
     @RequestMapping(value = "/autoparts/{id}/eliminar", method = RequestMethod.POST)
-    public String deleteAutopart(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deleteAutopart(@PathVariable Long id, 
+                               @RequestParam(value = "q", required = false) String query,
+                               @RequestParam(value = "tab", required = false, defaultValue = "consult") String tab,
+                               RedirectAttributes redirectAttributes) {
         try {
             autopartService.deleteAutopart(id);
             redirectAttributes.addFlashAttribute("successMessage", "La refacción se eliminó correctamente.");
         } catch (EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "No se encontró la refacción que intentas eliminar.");
         }
+        
+        // Mantener los parámetros de búsqueda si existen
+        if (query != null && !query.isEmpty()) {
+            redirectAttributes.addAttribute("q", query);
+        }
+        redirectAttributes.addAttribute("tab", "consult");
+        
         return "redirect:/autoparts";
     }
 

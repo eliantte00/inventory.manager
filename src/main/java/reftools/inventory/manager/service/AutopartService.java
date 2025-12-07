@@ -22,12 +22,7 @@ public class AutopartService {
     public Autopart createAutopart(Autopart autopart) {
         Optional<Autopart> existing = autopartRepository.findBySku(autopart.getSku());
         if (existing.isPresent()) {
-            Autopart persisted = existing.get();
-            persisted.setName(autopart.getName());
-            persisted.setBrand(autopart.getBrand());
-            persisted.setPrice(autopart.getPrice());
-            persisted.setAmount(persisted.getAmount() + autopart.getAmount());
-            return autopartRepository.save(persisted);
+            throw new IllegalArgumentException("Ya existe una refacción registrada con ese SKU.");
         }
         return autopartRepository.save(autopart);
     }
