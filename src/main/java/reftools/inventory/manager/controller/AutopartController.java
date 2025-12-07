@@ -2,11 +2,16 @@ package reftools.inventory.manager.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reftools.inventory.manager.dto.AutopartRequest;
+import reftools.inventory.manager.mapper.AutopartMapper;
 import reftools.inventory.manager.model.Autopart;
 import reftools.inventory.manager.service.AutopartService;
 
@@ -20,16 +25,26 @@ public class AutopartController {
         this.autopartService = autopartService;
     }
 
+    @GetMapping
+    public ResponseEntity<?> list() {
+        return ResponseEntity.ok(autopartService.getAllAutoparts());
+    }
+
     @PostMapping
     public ResponseEntity<Autopart> create(@RequestBody AutopartRequest request) {
-        Autopart autopart = new Autopart(
-                request.getName(),
-                request.getBrand(),
-                request.getSku(),
-                request.getPrice(),
-                request.getAmount()
-        );
-        Autopart saved = autopartService.createAutopart(autopart);
+        Autopart saved = autopartService.createAutopart(AutopartMapper.fromRequest(request));
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody AutopartRequest request) {
+        try {
+            Autopart updated = autopartService.updateAutopart(id, AutopartMapper.fromRequest(request));
+            return ResponseEntity.ok(updated);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

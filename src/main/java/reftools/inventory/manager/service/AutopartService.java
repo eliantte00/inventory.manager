@@ -1,5 +1,6 @@
 package reftools.inventory.manager.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reftools.inventory.manager.model.Autopart;
@@ -34,5 +35,26 @@ public class AutopartService {
     @Transactional(readOnly = true)
     public List<Autopart> getAllAutoparts() {
         return autopartRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Autopart getAutopart(Long id) {
+        return autopartRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Refacción no encontrada"));
+    }
+
+    @Transactional
+    public Autopart updateAutopart(Long id, Autopart data) {
+        Autopart existing = getAutopart(id);
+        Optional<Autopart> conflict = autopartRepository.findBySku(data.getSku());
+        if (conflict.isPresent() && !conflict.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Ya existe una refacción con ese SKU.");
+        }
+        existing.setName(data.getName());
+        existing.setBrand(data.getBrand());
+        existing.setSku(data.getSku());
+        existing.setPrice(data.getPrice());
+        existing.setAmount(data.getAmount());
+        return autopartRepository.save(existing);
     }
 }

@@ -1,9 +1,11 @@
 package reftools.inventory.manager.controller;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import reftools.inventory.manager.dto.AutopartRequest;
@@ -24,6 +26,7 @@ public class AutopartViewController {
         if (!model.containsAttribute("autopartForm")) {
             model.addAttribute("autopartForm", new AutopartRequest());
         }
+        model.addAttribute("editing", false);
         model.addAttribute("autoparts", autopartService.getAllAutoparts());
         return "autoparts";
     }
@@ -33,6 +36,36 @@ public class AutopartViewController {
                                  RedirectAttributes redirectAttributes) {
         autopartService.createAutopart(AutopartMapper.fromRequest(request));
         redirectAttributes.addFlashAttribute("successMessage", "La refacción se registró correctamente.");
+        return "redirect:/autoparts";
+    }
+
+    @GetMapping("/autoparts/{id}/editar")
+    public String showEditForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            model.addAttribute("autopartForm", AutopartMapper.toRequest(autopartService.getAutopart(id)));
+            model.addAttribute("autoparts", autopartService.getAllAutoparts());
+            model.addAttribute("editing", true);
+            return "autoparts";
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No se encontró la refacción solicitada.");
+            return "redirect:/autoparts";
+        }
+    }
+
+    @PostMapping("/autoparts/{id}/editar")
+    public String updateAutopart(@PathVariable Long id,
+                                 @ModelAttribute("autopartForm") AutopartRequest request,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            autopartService.updateAutopart(id, AutopartMapper.fromRequest(request));
+            redirectAttributes.addFlashAttribute("successMessage", "La refacción se actualizó correctamente.");
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No se encontró la refacción que intentas editar.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("autopartForm", request);
+            return "redirect:/autoparts/" + id + "/editar";
+        }
         return "redirect:/autoparts";
     }
 }
