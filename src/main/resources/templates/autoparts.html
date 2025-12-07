@@ -86,13 +86,33 @@
             color: #64748b;
         }
         .alert {
-            background: #ecfccb;
-            border: 1px solid #bef264;
-            color: #365314;
             padding: 0.85rem 1rem;
             border-radius: 10px;
             margin-bottom: 1rem;
             font-weight: 600;
+        }
+        .alert--success {
+            background: #ecfccb;
+            border: 1px solid #bef264;
+            color: #365314;
+        }
+        .alert--error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #7f1d1d;
+        }
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+        .link-button {
+            border: none;
+            background: transparent;
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
         }
     </style>
 </head>
@@ -104,9 +124,11 @@
     </header>
 
     <section class="card">
-        <h2>Agregar una refacción</h2>
-        <div th:if="${successMessage}" class="alert" th:text="${successMessage}"></div>
-        <form th:action="@{/autoparts}" th:object="${autopartForm}" method="post">
+        <h2 th:text="${editing} ? 'Editar refacción' : 'Agregar una refacción'"></h2>
+        <div th:if="${successMessage}" class="alert alert--success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert--error" th:text="${errorMessage}"></div>
+        <form th:action="${editing} ? @{/autoparts/{id}/editar(id=${autopartForm.id})} : @{/autoparts}" th:object="${autopartForm}" method="post">
+            <input type="hidden" th:if="${editing}" th:field="*{id}">
             <div>
                 <label for="name">Nombre</label>
                 <input id="name" type="text" th:field="*{name}" placeholder="Balatas" required>
@@ -128,7 +150,10 @@
                 <input id="amount" type="number" min="0" th:field="*{amount}" placeholder="10" required>
             </div>
             <div class="full-row" style="margin-top: 0.5rem;">
-                <button type="submit">Guardar refacción</button>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <button type="submit" th:text="${editing} ? 'Guardar cambios' : 'Guardar refacción'"></button>
+                    <a th:if="${editing}" href="/autoparts" class="link-button">Cancelar</a>
+                </div>
             </div>
         </form>
     </section>
@@ -147,6 +172,7 @@
                     <th>SKU</th>
                     <th>Precio</th>
                     <th>Existencias</th>
+                    <th style="text-align: right;">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -156,6 +182,9 @@
                     <td th:text="${autopart.sku}"></td>
                     <td th:text="${#numbers.formatDecimal(autopart.price, 1, 'COMMA', 2, 'POINT')}"></td>
                     <td th:text="${autopart.amount}"></td>
+                    <td class="actions">
+                        <a th:href="@{/autoparts/{id}/editar(id=${autopart.id})}" class="link-button">Editar</a>
+                    </td>
                 </tr>
                 </tbody>
             </table>
