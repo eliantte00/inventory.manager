@@ -6,121 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: #1f2933;
-            background-color: #f8fafc;
-        }
-        body {
-            margin: 0;
-        }
-        .page {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 3rem 1.5rem 4rem;
-        }
-        h1 {
-            margin-bottom: 0.5rem;
-        }
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
-            margin-bottom: 1.5rem;
-        }
-        form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem 1.5rem;
-        }
-        label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 0.35rem;
-            display: block;
-        }
-        input {
-            width: 100%;
-            padding: 0.65rem 0.75rem;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.95rem;
-        }
-        .full-row {
-            grid-column: 1 / -1;
-        }
-        button {
-            border: none;
-            border-radius: 999px;
-            padding: 0.75rem 1.75rem;
-            background: #2563eb;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-        button:hover {
-            background: #1d4ed8;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            text-align: left;
-            padding: 0.75rem 0.5rem;
-        }
-        th {
-            font-size: 0.85rem;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: #475569;
-        }
-        tbody tr {
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .empty-state {
-            padding: 1rem 0;
-            color: #64748b;
-        }
-        .alert {
-            padding: 0.85rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-        .alert--success {
-            background: #ecfccb;
-            border: 1px solid #bef264;
-            color: #365314;
-        }
-        .alert--error {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #7f1d1d;
-        }
-        .actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-        }
-        .link-button {
-            border: none;
-            background: transparent;
-            color: #2563eb;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 0.25rem 0.5rem;
-        }
-        .link-button--danger {
-            color: #dc2626;
-        }
-        .inline-form {
-            margin: 0;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/autoparts.css}">
 </head>
 <body>
 <div class="page">
@@ -128,6 +14,38 @@
         <h1>Inventario de refacciones</h1>
         <p>Consulta las refacciones existentes y agrega nuevas al catálogo.</p>
     </header>
+
+    <section class="card card--search">
+        <div class="search-header">
+            <div>
+                <h2>Consultar existencias</h2>
+                <p>Ingresa un nombre o SKU para conocer el total de existencias registradas.</p>
+            </div>
+        </div>
+        <form class="search-bar" method="get" th:action="@{/autoparts}">
+            <input type="text" name="q" placeholder="Buscar por nombre o SKU" th:value="${searchQuery}">
+            <button type="submit" class="search-bar__button">Buscar</button>
+            <a th:if="${searchQuery}" th:href="@{/autoparts}" class="link-button link-button--ghost">Limpiar</a>
+        </form>
+        <div class="search-results" th:if="${searchQuery}">
+            <div class="search-results__summary">
+                <span th:text="'Coincidencias: ' + ${searchResults.size()}"></span>
+                <span th:text="'Total de existencias: ' + (${searchTotalAmount} != null ? ${searchTotalAmount} : 0)"></span>
+            </div>
+            <div th:if="${#lists.isEmpty(searchResults)}" class="search-results__empty">
+                No se encontraron refacciones para "<span th:text="${searchQuery}"></span>".
+            </div>
+            <ul th:if="${!#lists.isEmpty(searchResults)}">
+                <li th:each="result : ${searchResults}">
+                    <div>
+                        <strong th:text="${result.name}"></strong>
+                        <span th:text="'SKU: ' + ${result.sku}"></span>
+                    </div>
+                    <span th:text="${result.amount} + ' existencias'"></span>
+                </li>
+            </ul>
+        </div>
+    </section>
 
     <section class="card">
         <h2 th:text="${editing} ? 'Editar refacción' : 'Agregar una refacción'"></h2>
@@ -189,7 +107,9 @@
                     <td th:text="${#numbers.formatDecimal(autopart.price, 1, 'COMMA', 2, 'POINT')}"></td>
                     <td th:text="${autopart.amount}"></td>
                     <td class="actions" style="justify-content: flex-end; gap: 0.25rem;">
-                        <a th:href="@{/autoparts/{id}/editar(id=${autopart.id})}" class="link-button">Editar</a>
+                        <form th:action="@{/autoparts/{id}/editar(id=${autopart.id})}" method="get" class="inline-form">
+                            <button type="submit" class="link-button">Editar</button>
+                        </form>
                         <form th:action="@{/autoparts/{id}/eliminar(id=${autopart.id})}" method="post" class="inline-form"
                               onsubmit="return confirm('¿Quieres eliminar esta refacción?');">
                             <button type="submit" class="link-button link-button--danger">Eliminar</button>

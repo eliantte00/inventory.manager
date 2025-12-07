@@ -9,10 +9,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import reftools.inventory.manager.dto.AutopartRequest;
 import reftools.inventory.manager.mapper.AutopartMapper;
+import reftools.inventory.manager.model.Autopart;
 import reftools.inventory.manager.service.AutopartService;
+
+import java.util.Collections;
+import java.util.List;
 
 @Controller
 public class AutopartViewController {
@@ -24,12 +29,24 @@ public class AutopartViewController {
     }
 
     @GetMapping({"/", "/autoparts"})
-    public String showAutoparts(Model model) {
+    public String showAutoparts(@RequestParam(value = "q", required = false) String query, Model model) {
         if (!model.containsAttribute("autopartForm")) {
             model.addAttribute("autopartForm", new AutopartRequest());
         }
         model.addAttribute("editing", false);
         model.addAttribute("autoparts", autopartService.getAllAutoparts());
+
+        List<Autopart> searchResults = Collections.emptyList();
+        Integer totalAmount = null;
+        if (query != null && !query.isBlank()) {
+            searchResults = autopartService.searchAutoparts(query);
+            totalAmount = searchResults.stream()
+                    .mapToInt(Autopart::getAmount)
+                    .sum();
+        }
+        model.addAttribute("searchQuery", query != null ? query : "");
+        model.addAttribute("searchResults", searchResults);
+        model.addAttribute("searchTotalAmount", totalAmount);
         return "autoparts";
     }
 
@@ -47,6 +64,7 @@ public class AutopartViewController {
             model.addAttribute("autopartForm", AutopartMapper.toRequest(autopartService.getAutopart(id)));
             model.addAttribute("autoparts", autopartService.getAllAutoparts());
             model.addAttribute("editing", true);
+            prepareEmptySearchContext(model);
             return "autoparts";
         } catch (EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "No se encontró la refacción solicitada.");
@@ -80,5 +98,11 @@ public class AutopartViewController {
             redirectAttributes.addFlashAttribute("errorMessage", "No se encontró la refacción que intentas eliminar.");
         }
         return "redirect:/autoparts";
+    }
+
+    private void prepareEmptySearchContext(Model model) {
+        model.addAttribute("searchQuery", "");
+        model.addAttribute("searchResults", Collections.emptyList());
+        model.addAttribute("searchTotalAmount", null);
     }
 }

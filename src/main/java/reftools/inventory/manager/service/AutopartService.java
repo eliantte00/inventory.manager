@@ -38,6 +38,15 @@ public class AutopartService {
     }
 
     @Transactional(readOnly = true)
+    public List<Autopart> searchAutoparts(String query) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+        String sanitized = query.trim();
+        return autopartRepository.findByNameContainingIgnoreCaseOrSkuContainingIgnoreCase(sanitized, sanitized);
+    }
+
+    @Transactional(readOnly = true)
     public Autopart getAutopart(Long id) {
         return autopartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Refacción no encontrada"));
