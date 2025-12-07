@@ -12,5 +12,7 @@ public interface AutopartRepository extends JpaRepository<Autopart, Long> {
 
     Optional<Autopart> findBySku(String sku);
 
-    List<Autopart> findByNameContainingIgnoreCaseOrSkuContainingIgnoreCase(String name, String sku);
+    List<Autopart> findByNameContainingIgnoreCaseOrBrandContainingIgnoreCaseOrSkuContainingIgnoreCase(String name,
+                                                                                                     String brand,
+                                                                                                     String sku);
 }
