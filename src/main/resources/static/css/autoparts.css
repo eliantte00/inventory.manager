@@ -28,6 +28,37 @@ body {
     padding: 3rem 1.5rem 4rem;
 }
 
+.tabs {
+    display: flex;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+}
+
+.tab-button {
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-button.active {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: #050712;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
 h1 {
     margin-bottom: 0.5rem;
     font-size: 2.25rem;

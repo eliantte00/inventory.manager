@@ -47,6 +47,7 @@ public class AutopartViewController {
         model.addAttribute("searchQuery", query != null ? query : "");
         model.addAttribute("searchResults", searchResults);
         model.addAttribute("searchTotalAmount", totalAmount);
+        model.addAttribute("activeTab", (query != null && !query.isBlank()) ? "consult" : "add");
         return "autoparts";
     }
 
@@ -104,5 +105,6 @@ public class AutopartViewController {
         model.addAttribute("searchQuery", "");
         model.addAttribute("searchResults", Collections.emptyList());
         model.addAttribute("searchTotalAmount", null);
+        model.addAttribute("activeTab", "add");
     }
 }
