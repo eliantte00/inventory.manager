@@ -79,10 +79,19 @@
 
         <section class="card">
             <h2>Refacciones registradas</h2>
-            <div th:if="${isFiltering}" class="search-summary">
-                <span th:text="'Coincidencias: ' + ${searchResults.size()}"></span>
-                <span th:text="'Total de existencias: ' + (${searchTotalAmount} != null ? ${searchTotalAmount} : 0)"></span>
+            <div class="search-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div th:if="${isFiltering}" class="search-summary">
+                    <span th:text="'Coincidencias: ' + ${searchResults.size()}"></span>
+                    <span th:if="${searchTotalAmount != null}" style="margin-left: 1rem;" th:text="'Total de existencias: ' + ${searchTotalAmount}"></span>
+                </div>
+                <div>
+                    <a th:href="@{/autoparts(tab='consult', q=${searchQuery}, sort=${isSortingByStock ? '' : 'amount'})}" 
+                       class="search-bar__button search-bar__button--ghost">
+                        <span th:text="${isSortingByStock} ? 'Ordenar por defecto' : 'Ordenar por existencias'"></span>
+                    </a>
+                </div>
             </div>
+            
             <div th:if="${#lists.isEmpty(autoparts)}" class="empty-state">
                 <span th:if="${isFiltering}" th:text="'No se encontraron refacciones para \'' + ${searchQuery} + '\''"></span>
                 <span th:unless="${isFiltering}">Aún no hay refacciones. Usa el formulario para registrar la primera.</span>
